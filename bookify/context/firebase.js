@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { createContext, useContext } from "react";
 import { initializeApp } from "firebase/app";
 import {
@@ -18,6 +18,10 @@ import {
     addDoc,
 
 } from "firebase/firestore";
+import axios from "axios";
+
+
+
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyA0pVqF58VCRHuAA3XhvKa3eGbmZNdFLNg",
@@ -61,21 +65,39 @@ export const FirebaseProvider = ({ children }) => {
   const logoutUser = () => signOut(auth);
 
   const handleCreateNewBookListing = async (data)=>{
-    const {name, author, isbnNumber, genre, price, description, coverPicture, publicationYear, publisher, language}  = data
-
-    console.log(data);
-    console.log(name, author, isbnNumber, genre, price, description, coverPicture, publicationYear, publisher, language)
-
-    // try {
-    // const docRef = await addDoc(collection(db, "users"), {
-    //     first: "Ada",
-    //     last: "Lovelace",
-    //     born: 1815
-    // });
-    // console.log("Document written with ID: ", docRef.id);
-    // } catch (e) {
-    // console.error("Error adding document: ", e);
-    // }
+    // Upload image to Cloudinary first
+          let imageUrl = ''
+          if (data.coverPicture) {
+            const imageData = new FormData()
+            imageData.append("file", data.coverPicture)
+            imageData.append("upload_preset", "Bookify")
+            imageData.append("cloud_name", "dios4qc67")
+            
+            const response = await axios.post(
+              "https://api.cloudinary.com/v1_1/dios4qc67/image/upload",
+              imageData
+            )
+            
+            imageUrl = response.data.secure_url
+          }
+    
+          // Save to Firebase
+          const docRef = await addDoc(collection(db, "books"), {
+            bookName: data.name,
+            bookAuthor: data.author,
+            bookIsbnNumber: data.isbnNumber,
+            bookGenre: data.genre,
+            bookPrice: parseFloat(data.price),
+            bookDescription: data.description,
+            bookCoverImage: imageUrl,
+            bookPublicationYear: data.publicationYear ? parseInt(data.publicationYear) : null,
+            bookPublisher: data.publisher || '',
+            bookLanguage: data.language || '',
+            createdAt: new Date(),
+            // userId: user?.uid // Assuming you have user context
+          })
+    
+          console.log("Document written with ID: ", docRef.id)
   }
 
   return (
