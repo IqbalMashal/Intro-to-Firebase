@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { createContext, useContext } from "react";
 import { initializeApp } from "firebase/app";
 import {
@@ -16,6 +16,9 @@ import {
     getFirestore,
     collection,
     addDoc,
+    getDocs, 
+    doc,
+    getDoc
 
 } from "firebase/firestore";
 import axios from "axios";
@@ -94,11 +97,33 @@ export const FirebaseProvider = ({ children }) => {
             bookPublisher: data.publisher || '',
             bookLanguage: data.language || '',
             createdAt: new Date(),
-            // userId: user?.uid // Assuming you have user context
+            userId: user?.uid,
+            userEmail: user?.email,
+            displayName: user?.displayName,
+            photoURL: user?.photoURL,
+
           })
     
           console.log("Document written with ID: ", docRef.id)
   }
+
+  const getListAll = async () => {
+    const querySnapshot = await getDocs(collection(db, "books"));
+
+    const books = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return books;
+  };
+
+  const getBookbyID = async (id)=>{
+    const docRef = doc(db, "books", id)
+    const bookdata = await getDoc(docRef)
+    return bookdata
+  }
+
 
   return (
     <FireBaseContext.Provider
@@ -109,6 +134,8 @@ export const FirebaseProvider = ({ children }) => {
         logoutUser,
         handleCreateNewBookListing,
         isloggedIn,
+        getListAll,
+        getBookbyID
      }}
     >
       {children}

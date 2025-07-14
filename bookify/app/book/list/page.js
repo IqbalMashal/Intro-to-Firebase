@@ -50,7 +50,6 @@ export default function ListingPage() {
       
       firebase.handleCreateNewBookListing(data)
       
-      // Reset form and preview
       reset()
       setImagePreview(null)
       alert("Book added successfully!")
